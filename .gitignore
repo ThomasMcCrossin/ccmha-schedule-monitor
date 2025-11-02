@@ -1,0 +1,40 @@
+# Environment and secrets
+.env
+*.env
+
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Data files
+data/
+*.csv
+*.json
+
+# Logs
+logs/
+*.log
+
+# Archive
+archive/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+.dockerignore
+
+# Temporary files
+/tmp/
+*.tmp
