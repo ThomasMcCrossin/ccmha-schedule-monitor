@@ -161,8 +161,8 @@ nano /home/clarencehub/grayjay-schedule/.env
 **Available settings:**
 ```bash
 # Email
-SENDER_EMAIL=thomasmccrossin12@gmail.com
-SENDER_PASSWORD=swwyowopiijrhkic
+SENDER_EMAIL=your-email@gmail.com
+SENDER_PASSWORD=your-gmail-app-password-here
 RECIPIENT_EMAILS=tom@curlys.ca
 
 # Scraping

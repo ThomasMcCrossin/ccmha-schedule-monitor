@@ -1,26 +1,27 @@
-# Environment and secrets
+# Environment files with secrets
 .env
 *.env
+!.env.example
+!.env.template
 
 # Python
-venv/
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
+*.py[cod]
+*$py.class
+*.so
 .Python
+venv/
+ENV/
 
-# Data files
+# Data and logs
 data/
-*.csv
-*.json
-
-# Logs
 logs/
+*.csv
 *.log
 
-# Archive
-archive/
+# OS
+.DS_Store
+Thumbs.db
 
 # IDE
 .vscode/
@@ -28,13 +29,8 @@ archive/
 *.swp
 *.swo
 
-# OS
-.DS_Store
-Thumbs.db
-
-# Docker
-.dockerignore
-
-# Temporary files
-/tmp/
-*.tmp
+# Sensitive files
+*password*
+*secret*
+!*example*
+!*template*

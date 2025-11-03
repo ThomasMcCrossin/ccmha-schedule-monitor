@@ -36,16 +36,37 @@ def load_schedule_csv(filepath: str) -> List[Dict]:
 
 
 def filter_next_n_days(items: List[Dict], days: int = 7) -> List[Dict]:
-    """Filter items to only include next N days"""
-    today = datetime.now().date()
+    """Filter items to only include next N days (excluding today's completed games)"""
+    now = datetime.now()
+    today = now.date()
     end_date = today + timedelta(days=days)
 
     filtered = []
     for item in items:
         try:
             item_date = datetime.strptime(item['date'], '%Y-%m-%d').date()
-            if today <= item_date <= end_date:
+
+            # For future dates, include all games
+            if item_date > today and item_date <= end_date:
                 filtered.append(item)
+            # For today's games, only include if they haven't started yet
+            elif item_date == today:
+                # Try to parse start time to check if game is in the future
+                try:
+                    start_time_str = item.get('start_time', '')
+                    if start_time_str:
+                        # Parse time (format: HH:MM or HH:MM:SS)
+                        game_datetime = datetime.strptime(f"{item['date']} {start_time_str}", '%Y-%m-%d %H:%M:%S' if ':' in start_time_str and start_time_str.count(':') == 2 else '%Y-%m-%d %H:%M')
+                        # Only include if game hasn't started yet (or started within last hour for safety margin)
+                        if game_datetime > now - timedelta(hours=1):
+                            filtered.append(item)
+                    else:
+                        # No time info, include it to be safe
+                        filtered.append(item)
+                except (ValueError, KeyError):
+                    # If we can't parse the time, include it to be safe
+                    filtered.append(item)
+
         except (ValueError, KeyError) as e:
             logger.warning(f"Could not parse date for item: {e}")
             continue
