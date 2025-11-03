@@ -41,6 +41,59 @@ class EmailNotifier:
         if test_mode:
             logger.info("TEST MODE: Emails will not be sent")
 
+    def analyze_schedule(self, games: List[Dict]) -> Dict:
+        """Analyze schedule for staffing and daily breakdown"""
+        from collections import defaultdict
+        from datetime import datetime, timedelta
+
+        daily_games = defaultdict(list)
+        multi_game_days = []
+        daily_time_blocks = {}
+
+        for game in games:
+            date = game.get('date', 'TBA')
+            if date != 'TBA':
+                daily_games[date].append(game)
+
+        # Process each day
+        for date, day_games in sorted(daily_games.items()):
+            # Sort games by start time
+            sorted_games = sorted(day_games, key=lambda g: g.get('start_time', ''))
+
+            if sorted_games:
+                # Get first start time and last end time
+                first_start = sorted_games[0].get('start_time', 'TBA')
+                last_game = sorted_games[-1]
+                last_end = last_game.get('end_time', last_game.get('start_time', 'TBA'))
+
+                # Format times (remove seconds if present)
+                if first_start and ':' in first_start:
+                    first_start = ':'.join(first_start.split(':')[:2])
+                if last_end and ':' in last_end:
+                    last_end = ':'.join(last_end.split(':')[:2])
+
+                daily_time_blocks[date] = {
+                    'start': first_start,
+                    'end': last_end,
+                    'game_count': len(day_games)
+                }
+
+            # Find days with multiple games (need 2 staff)
+            if len(day_games) >= 2:
+                times = [g.get('start_time', 'TBA') for g in day_games]
+                multi_game_days.append({
+                    'date': date,
+                    'game_count': len(day_games),
+                    'times': times
+                })
+
+        return {
+            'daily_games': dict(daily_games),
+            'daily_time_blocks': daily_time_blocks,
+            'multi_game_days': multi_game_days,
+            'total_days': len(daily_games)
+        }
+
     def create_html_report(self, games: List[Dict]) -> str:
         """Create an HTML email report from games data"""
 
@@ -57,6 +110,49 @@ class EmailNotifier:
             </html>
             """.format(datetime.now().strftime('%Y-%m-%d %H:%M'))
 
+        # Analyze schedule
+        analysis = self.analyze_schedule(games)
+
+        # Build staffing alert
+        staffing_html = ""
+        if analysis['multi_game_days']:
+            staffing_items = []
+            for day_info in analysis['multi_game_days']:
+                times_str = ", ".join(day_info['times'])
+                staffing_items.append(
+                    f"<li><strong>{day_info['date']}</strong>: {day_info['game_count']} games ({times_str})</li>"
+                )
+            staffing_html = f"""
+            <div class="staffing-alert">
+                <h3 style="margin-top: 0;">⚠️ STAFFING ALERT: Days Requiring 2 Staff Members</h3>
+                <ul style="margin: 10px 0;">
+                    {''.join(staffing_items)}
+                </ul>
+            </div>
+            """
+
+        # Build daily breakdown with time blocks
+        daily_breakdown_html = "<h3>📅 Weekly Schedule Overview</h3><div class='daily-breakdown'>"
+        for date in sorted(analysis['daily_time_blocks'].keys()):
+            time_block = analysis['daily_time_blocks'][date]
+            game_count = time_block['game_count']
+            staff_needed = "2 STAFF" if game_count >= 2 else "1 staff"
+
+            daily_breakdown_html += f"""
+            <div class="day-section">
+                <div class="day-header">
+                    <strong>{date}</strong>
+                </div>
+                <div class="time-block">
+                    Stadium busy: <strong>{time_block['start']} - {time_block['end']}</strong>
+                    ({game_count} game{'' if game_count == 1 else 's'})
+                    <span class="staff-badge {'multi-staff' if game_count >= 2 else ''}">{staff_needed}</span>
+                </div>
+            </div>
+            """
+
+        daily_breakdown_html += "</div>"
+
         # Start HTML
         html = """
         <html>
@@ -64,6 +160,7 @@ class EmailNotifier:
             <style>
                 body {{ font-family: Arial, sans-serif; }}
                 h2 {{ color: #2c3e50; }}
+                h3 {{ color: #34495e; margin-top: 25px; }}
                 table {{
                     border-collapse: collapse;
                     width: 100%;
@@ -88,6 +185,51 @@ class EmailNotifier:
                     margin: 20px 0;
                     border-radius: 5px;
                 }}
+                .staffing-alert {{
+                    background-color: #fff3cd;
+                    border-left: 4px solid #ff6b6b;
+                    padding: 15px;
+                    margin: 20px 0;
+                    border-radius: 5px;
+                }}
+                .staffing-alert h3 {{
+                    color: #d63031;
+                    margin-top: 0;
+                }}
+                .daily-breakdown {{
+                    margin: 15px 0;
+                }}
+                .day-section {{
+                    background-color: #f8f9fa;
+                    border-left: 3px solid #3498db;
+                    padding: 12px;
+                    margin: 10px 0;
+                    border-radius: 5px;
+                }}
+                .day-header {{
+                    font-size: 16px;
+                    margin-bottom: 8px;
+                }}
+                .staff-badge {{
+                    background-color: #95a5a6;
+                    color: white;
+                    padding: 3px 8px;
+                    border-radius: 3px;
+                    font-size: 13px;
+                    font-weight: bold;
+                }}
+                .staff-badge.multi-staff {{
+                    background-color: #e74c3c;
+                }}
+                .game-list {{
+                    margin: 5px 0 0 20px;
+                    color: #2c3e50;
+                }}
+                .time-block {{
+                    font-size: 15px;
+                    padding: 8px 0;
+                    color: #2c3e50;
+                }}
                 .footer {{
                     margin-top: 30px;
                     font-size: 12px;
@@ -105,9 +247,14 @@ class EmailNotifier:
             <h2>🏒 CCMHA Weekly Schedule Report - Amherst Stadium</h2>
 
             <div class="summary">
-                <strong>Summary:</strong> {game_count} game(s) scheduled at Amherst Stadium for the upcoming week
+                <strong>Summary:</strong> {game_count} game(s) across {total_days} day(s) at Amherst Stadium
             </div>
 
+            {staffing_alert}
+
+            {daily_breakdown}
+
+            <h3>📋 Complete Schedule</h3>
             <table>
                 <thead>
                     <tr>
@@ -120,13 +267,28 @@ class EmailNotifier:
                     </tr>
                 </thead>
                 <tbody>
-        """.format(game_count=len(games))
+        """.format(
+            game_count=len(games),
+            total_days=analysis['total_days'],
+            staffing_alert=staffing_html,
+            daily_breakdown=daily_breakdown_html
+        )
+
+        # Sort games by date and time before displaying
+        sorted_games = sorted(games, key=lambda x: (x.get('date', ''), x.get('start_time', '')))
 
         # Add game rows
-        for game in games:
+        for game in sorted_games:
             # Format time nicely
             start_time = game.get('start_time', 'TBA')
             end_time = game.get('end_time', '')
+
+            # Clean up time format (remove seconds if present)
+            if start_time and ':' in start_time:
+                start_time = ':'.join(start_time.split(':')[:2])
+            if end_time and ':' in end_time:
+                end_time = ':'.join(end_time.split(':')[:2])
+
             time_display = f"{start_time}"
             if end_time:
                 time_display = f"{start_time} - {end_time}"
