@@ -258,8 +258,12 @@ def main():
         sys.exit(0)
 
     # Load previous snapshot
-    snapshot_items = load_schedule_csv(snapshot_csv)
-    logger.info(f"Previous snapshot has {len(snapshot_items)} items")
+    snapshot_all = load_schedule_csv(snapshot_csv)
+    logger.info(f"Previous snapshot loaded: {len(snapshot_all)} items")
+
+    # Filter snapshot to same time window (exclude naturally expired events)
+    snapshot_items = filter_next_n_days(snapshot_all, DAYS_TO_MONITOR)
+    logger.info(f"Previous snapshot filtered to next {DAYS_TO_MONITOR} days: {len(snapshot_items)} items")
 
     # Detect changes
     changes = detect_changes(snapshot_items, current_items)
