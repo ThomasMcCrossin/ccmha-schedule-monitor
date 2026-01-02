@@ -6,6 +6,7 @@ Uses Master Schedule API to get games, practices, and all ice times
 
 import os
 import sys
+import json
 import logging
 import requests
 from datetime import datetime, timedelta
@@ -177,6 +178,19 @@ def save_to_csv(items: List[Dict], filename: str):
     df.to_csv(filename, index=False)
     logger.info(f"Saved {len(items)} items to {filename}")
 
+def save_to_json(items: List[Dict], filename: str, days_ahead: int, venue_filter: str, timezone: str):
+    """Save items to JSON for display clients"""
+    payload = {
+        'generated_at': datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),
+        'timezone': timezone,
+        'venue_filter': venue_filter,
+        'days_ahead': days_ahead,
+        'items': items
+    }
+    with open(filename, 'w') as f:
+        json.dump(payload, f, indent=2)
+    logger.info(f"Saved JSON output to {filename}")
+
 
 def main():
     """Main execution function"""
@@ -189,6 +203,8 @@ def main():
     VENUE_FILTER = os.getenv('VENUE_FILTER', 'Amherst Stadium')
     OUTPUT_DIR = os.getenv('OUTPUT_DIR', '/var/www/ccmha')
     OUTPUT_FILE = os.path.join(OUTPUT_DIR, 'amherst_stadium_schedule.csv')
+    OUTPUT_JSON = os.path.join(OUTPUT_DIR, 'amherst_stadium_schedule.json')
+    TIMEZONE = os.getenv('TIMEZONE', 'America/Halifax')
 
     # Create output directory
     os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -215,6 +231,7 @@ def main():
 
     # Save to CSV
     save_to_csv(formatted_items, OUTPUT_FILE)
+    save_to_json(formatted_items, OUTPUT_JSON, DAYS_AHEAD, VENUE_FILTER, TIMEZONE)
 
     # Display summary
     logger.info("="*60)

@@ -179,6 +179,9 @@ tail -f logs/change_monitor.log
 # Current full schedule
 cat data/amherst_stadium_schedule.csv
 
+# JSON output (for signage dashboards)
+cat data/amherst_stadium_schedule.json
+
 # 7-day snapshot
 cat data/schedule_snapshot_7day.csv
 
@@ -241,6 +244,7 @@ grayjay-schedule/
 ├── .env                           # Configuration (not in git)
 ├── data/                          # Schedule data (not in git)
 │   ├── amherst_stadium_schedule.csv
+│   ├── amherst_stadium_schedule.json
 │   ├── schedule_snapshot_7day.csv
 │   └── schedule_changes.json
 ├── logs/                          # Logs (not in git)
