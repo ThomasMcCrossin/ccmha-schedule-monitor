@@ -17,7 +17,7 @@ lxml==4.9.3
 html5lib==1.1
 
 # Utilities
-python-dotenv==1.0.0  # For loading .env files
+python-dotenv==1.2.2  # For loading .env files
 
 # Optional: Enhanced scheduling (alternative to cron)
 schedule==1.2.0
