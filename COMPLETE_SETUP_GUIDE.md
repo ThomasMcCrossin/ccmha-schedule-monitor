@@ -225,17 +225,17 @@ SMTP_PORT=587
 ## 📞 Troubleshooting
 
 ### No weekly email received?
-1. Check cron log: `tail /home/clarencehub/grayjay-schedule/logs/cron.log`
+1. Check cron log: `tail "${HOME}/grayjay-schedule/logs/cron.log"`
 2. Test manually (see "Manual test run" above)
 3. Verify email in spam folder
 
 ### No change alerts?
 - Normal! Alerts only sent when changes detected
-- Check log: `tail /home/clarencehub/grayjay-schedule/logs/change_monitor.log`
+- Check log: `tail "${HOME}/grayjay-schedule/logs/change_monitor.log"`
 - Test by manually editing snapshot
 
 ### Missing games or practices?
-1. Check CSV: `cat /home/clarencehub/grayjay-schedule/data/amherst_stadium_schedule.csv`
+1. Check CSV: `cat "${HOME}/grayjay-schedule/data/amherst_stadium_schedule.csv"`
 2. Verify on CCMHA website
 3. Check logs for errors
 
