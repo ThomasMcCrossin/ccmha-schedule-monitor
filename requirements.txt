@@ -13,7 +13,7 @@ numpy==1.26.2
 requests==2.31.0
 
 # HTML Parsing
-lxml==4.9.3
+lxml==6.1.0
 html5lib==1.1
 
 # Utilities
