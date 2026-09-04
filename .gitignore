@@ -34,3 +34,15 @@ Thumbs.db
 *secret*
 !*example*
 !*template*
+
+# Local credentials and state
+*.pem
+*.key
+*.p12
+*.pfx
+*credentials*.json
+*service-account*.json
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal

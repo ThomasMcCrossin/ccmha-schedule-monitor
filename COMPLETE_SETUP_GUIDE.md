@@ -5,7 +5,7 @@
 ### 🎯 What This System Does
 
 **1. Weekly Schedule Reports (Sunday 8 PM)**
-- Sends full 14-day schedule to tom@curlys.ca
+- Sends a full 14-day schedule to configured recipients
 - Includes ALL ice times at Amherst Stadium:
   - ✅ Games (with "Team A vs Team B" format)
   - ✅ Practices
@@ -24,8 +24,8 @@
 
 ## 📧 Email Configuration
 
-**From:** thomasmccrossin12@gmail.com
-**To:** tom@curlys.ca
+**From:** configured sender address
+**To:** configured recipient addresses
 **SMTP:** Gmail with app password
 
 ---
@@ -102,7 +102,7 @@ Every day at 12:30 PM, 4:30 PM, and 1:00 AM
 2. Scraper fetches 14-day schedule from API
 3. Filters for Amherst Stadium
 4. Generates HTML email + CSV
-5. Sends to tom@curlys.ca
+5. Sends to configured recipients
 
 ### Change Monitoring Flow
 1. **12:30 PM / 4:30 PM / 1:00 AM** - Cron triggers
@@ -128,21 +128,21 @@ crontab -l | grep ccmha
 **View logs:**
 ```bash
 # Weekly reports
-tail -f /home/clarencehub/grayjay-schedule/logs/cron.log
+tail -f "${HOME}/grayjay-schedule/logs/cron.log"
 
 # Change monitoring
-tail -f /home/clarencehub/grayjay-schedule/logs/change_monitor.log
+tail -f "${HOME}/grayjay-schedule/logs/change_monitor.log"
 ```
 
 **View latest schedule:**
 ```bash
-cat /home/clarencehub/grayjay-schedule/data/amherst_stadium_schedule.csv
+cat "${HOME}/grayjay-schedule/data/amherst_stadium_schedule.csv"
 ```
 
 **Manual test run:**
 ```bash
 # Test weekly report
-cd /home/clarencehub/grayjay-schedule
+cd "${HOME}/grayjay-schedule"
 docker run --rm -v ./data:/data --env-file .env ccmha-monitor:api python3 ccmha_monitor.py
 
 # Test change monitoring
@@ -155,7 +155,7 @@ docker run --rm -v ./data:/data --env-file .env ccmha-monitor:api python3 ccmha_
 
 Edit `.env` to change settings:
 ```bash
-nano /home/clarencehub/grayjay-schedule/.env
+nano "${HOME}/grayjay-schedule/.env"
 ```
 
 **Available settings:**
@@ -163,7 +163,7 @@ nano /home/clarencehub/grayjay-schedule/.env
 # Email
 SENDER_EMAIL=your-email@gmail.com
 SENDER_PASSWORD=your-gmail-app-password-here
-RECIPIENT_EMAILS=tom@curlys.ca
+RECIPIENT_EMAILS=recipient@example.com
 
 # Scraping
 VENUE_FILTER=Amherst Stadium
@@ -181,16 +181,16 @@ SMTP_PORT=587
 
 ```bash
 # Weekly Report - Every Sunday at 8 PM
-0 20 * * 0 /usr/bin/docker run --rm -v /home/clarencehub/grayjay-schedule/data:/data --env-file /home/clarencehub/grayjay-schedule/.env ccmha-monitor:api python3 ccmha_monitor.py >> /home/clarencehub/grayjay-schedule/logs/cron.log 2>&1
+0 20 * * 0 /usr/bin/docker run --rm -v "${HOME}/grayjay-schedule/data:/data" --env-file "${HOME}/grayjay-schedule/.env" ccmha-monitor:api python3 ccmha_monitor.py >> "${HOME}/grayjay-schedule/logs/cron.log" 2>&1
 
 # Change Monitoring - 12:30 PM daily
-30 12 * * * /usr/bin/docker run --rm -v /home/clarencehub/grayjay-schedule/data:/data --env-file /home/clarencehub/grayjay-schedule/.env ccmha-monitor:api python3 ccmha_change_monitor.py >> /home/clarencehub/grayjay-schedule/logs/change_monitor.log 2>&1
+30 12 * * * /usr/bin/docker run --rm -v "${HOME}/grayjay-schedule/data:/data" --env-file "${HOME}/grayjay-schedule/.env" ccmha-monitor:api python3 ccmha_change_monitor.py >> "${HOME}/grayjay-schedule/logs/change_monitor.log" 2>&1
 
 # Change Monitoring - 4:30 PM daily
-30 16 * * * /usr/bin/docker run --rm -v /home/clarencehub/grayjay-schedule/data:/data --env-file /home/clarencehub/grayjay-schedule/.env ccmha-monitor:api python3 ccmha_change_monitor.py >> /home/clarencehub/grayjay-schedule/logs/change_monitor.log 2>&1
+30 16 * * * /usr/bin/docker run --rm -v "${HOME}/grayjay-schedule/data:/data" --env-file "${HOME}/grayjay-schedule/.env" ccmha-monitor:api python3 ccmha_change_monitor.py >> "${HOME}/grayjay-schedule/logs/change_monitor.log" 2>&1
 
 # Change Monitoring - 1:00 AM daily
-0 1 * * * /usr/bin/docker run --rm -v /home/clarencehub/grayjay-schedule/data:/data --env-file /home/clarencehub/grayjay-schedule/.env ccmha-monitor:api python3 ccmha_change_monitor.py >> /home/clarencehub/grayjay-schedule/logs/change_monitor.log 2>&1
+0 1 * * * /usr/bin/docker run --rm -v "${HOME}/grayjay-schedule/data:/data" --env-file "${HOME}/grayjay-schedule/.env" ccmha-monitor:api python3 ccmha_change_monitor.py >> "${HOME}/grayjay-schedule/logs/change_monitor.log" 2>&1
 ```
 
 ---
